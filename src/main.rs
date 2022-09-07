@@ -1,58 +1,40 @@
 mod image;
 
-use image::Image;
+use std::io::{Read, Write};
+
+use image::{Image, image_coder::ImageCoder};
+
+fn print_bytes(bytes: &[u8]) {
+    print!("[ ");
+    for b in bytes {
+        print!("{:#010b}, ", b);
+    }
+    println!("]");
+}
+    
+static TEST_STRING: &str = "Hello World!";
 
 fn main() {
-    let mut img1 = Image::create_image_from_file("C:\\Users\\Brian\\Desktop\\test.png");
-    let mut img2 = Image::create_image_from_file("C:\\Users\\Brian\\Desktop\\test2.png");
+    let mut img = Image::create_image_from_file("C:\\Users\\Brian\\Desktop\\blank2.png");
+    let pixel = img.get_pixel_value(0, 0);
+    println!("pixel: ({:#04X}, {:#04X}, {:#04X}, {:#04X})", pixel.0, pixel.1, pixel.2, pixel.3);
 
-    println!("Resolution: ({}, {})", img1.width(), img1.height());
+    let mut coder = ImageCoder::create(&mut img);
+    coder.num_bits(4);
+    let mut data = vec![0u8; TEST_STRING.len()];
 
-    let pixel1 = img1.get_pixel_value(908, 193);
-    let pixel2 = img2.get_pixel_value(908, 193);
+    coder.read(&mut data[..]);
+    print!("Original Data: \t");
+    print_bytes(&data[..]);
 
-    println!("Pixel1 at 908, 193: ({}, {}, {}, {})", pixel1.0, pixel1.1, pixel1.2, pixel1.3);
-    println!("Pixel2 at 908, 193: ({}, {}, {}, {})", pixel2.0, pixel2.1, pixel2.2, pixel2.3);
-
-    for x in 0..img1.width() {
-        for y in 0..img1.height() {
-            let color = img1.get_pixel_value(x, y);
-
-            let mut r = color.0 as u32;
-            let mut g = color.1 as u32;
-            let mut b = color.2 as u32;
-
-            r = (r as f32 * 1.2f32) as u32;
-            g = (g as f32 * 0.8f32) as u32;
-            b = (b as f32 * 0.8f32) as u32;
-
-            if r > 255 {
-                r = 255;
-            }
-
-            img1.set_pixel_value(x, y, (r as u8, g as u8, b as u8, color.3));
-        }
-    }
+    coder.write(TEST_STRING.as_bytes());
     
-    for x in 0..img2.width() {
-        for y in 0..img2.height() {
-            let color = img2.get_pixel_value(x, y);
+    print!("String Data: \t");
+    print_bytes(TEST_STRING.as_bytes());
 
-            let mut r = color.0 as u32;
-            let mut g = color.1 as u32;
-            let mut b = color.2 as u32;
+    coder.read(&mut data[..]);
+    print!("Read Data: \t");
+    print_bytes(&data[..]);
 
-            r = (r as f32 * 1.2f32) as u32;
-            g = (g as f32 * 0.8f32) as u32;
-            b = (b as f32 * 0.8f32) as u32;
-
-            if r > 255 {
-                r = 255;
-            }
-
-            img2.set_pixel_value(x, y, (r as u8, g as u8, b as u8, color.3));
-        }
-    }
-
-    Image::save_image_to_file(&img2, "C:\\Users\\Brian\\Desktop\\out2.png")
+    println!("String read from image: {}", std::str::from_utf8(&data[..]).unwrap());        
 }

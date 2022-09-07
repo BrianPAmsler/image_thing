@@ -1,5 +1,7 @@
 extern crate png;
 
+pub mod image_coder;
+
 use std::fs::File;
 
 fn as_mut_u8_slice(v: &mut [u32]) -> &mut [u8] {
@@ -24,7 +26,7 @@ fn as_u8_slice(v: &[u32]) -> &[u8] {
 pub struct Image {
     w: u32,
     h: u32,
-    data: Vec<u32>
+    pub(in crate::image) data: Vec<u32>
 }
 
 #[allow(dead_code)]
@@ -118,5 +120,9 @@ impl Image {
         let pixel: u32 = (color.3 as u32) << 24 | (color.2 as u32) << 16 | (color.1 as u32) << 8 | color.0 as u32;
         
         self.data[(x + y * self.w) as usize] = pixel;
+    }
+
+    pub fn get_bytes(&self) -> &[u8] {
+        as_u8_slice(&self.data[..])
     }
 }
