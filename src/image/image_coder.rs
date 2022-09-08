@@ -1,8 +1,6 @@
 use crate::image::Image;
 
-use std::io::{Read, Write, Error};
-
-use super::as_u8_slice;
+use std::io::{Read, Write};
 
 pub struct ImageCoder<'a> {
     img: &'a mut Image,
