@@ -1,8 +1,8 @@
-mod secret_writer;
+mod secret_rw;
 use std::{str::from_utf8, io::{Read, Write, BufReader}, convert::{TryFrom, TryInto}, fs::File};
 
 use crate::image::Image;
-use secret_writer::SecretWriter;
+use secret_rw::SecretWriter;
 
 use std::path::Path;
 
