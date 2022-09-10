@@ -3,7 +3,7 @@ mod image_secret;
 
 extern crate const_format;
 
-use std::{env, io::{Read, Write}, convert::TryInto, path::{Path, PathBuf}, fs::File, collections::HashMap};
+use std::{env, io::{Write}, path::{Path, PathBuf}, fs::File, collections::HashMap};
 use const_format::formatcp;
 
 use image::Image;
