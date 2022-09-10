@@ -1,7 +1,5 @@
 extern crate png;
 
-pub mod image_coder;
-
 use std::fs::File;
 
 fn as_mut_u8_slice(v: &mut [u32]) -> &mut [u8] {
@@ -37,7 +35,7 @@ impl Image {
         Image { w: width, h: height, data }
     }
 
-    pub fn create_image_from_file(filename: &str) -> Image {
+    pub fn create_image_from_file<P: AsRef<std::path::Path>>(filename: P) -> Image {
         let decoder = png::Decoder::new(File::open(filename).unwrap());
         let mut reader = decoder.read_info().unwrap();
 
@@ -83,8 +81,8 @@ impl Image {
         }
     }
 
-    pub fn save_image_to_file(img: &Image, filename: &str) {
-        let f = std::fs::File::create(std::path::Path::new(filename)).unwrap();
+    pub fn save_image_to_file<P: AsRef<std::path::Path>>(img: &Image, filename: P) {
+        let f = std::fs::File::create(filename).unwrap();
         
         let ref mut w = std::io::BufWriter::new(f);
 
@@ -120,6 +118,14 @@ impl Image {
         let pixel: u32 = (color.3 as u32) << 24 | (color.2 as u32) << 16 | (color.1 as u32) << 8 | color.0 as u32;
         
         self.data[(x + y * self.w) as usize] = pixel;
+    }
+
+    pub fn get_raw_data(&self) -> &[u32] {
+        &self.data
+    }
+    
+    pub fn get_raw_data_mut(&mut self) -> &mut [u32] {
+        &mut self.data
     }
 
     pub fn get_bytes(&self) -> &[u8] {

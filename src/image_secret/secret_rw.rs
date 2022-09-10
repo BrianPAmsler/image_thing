@@ -2,19 +2,19 @@ use crate::image::Image;
 
 use std::io::{Read, Write};
 
-pub struct ImageCoder<'a> {
+pub struct SecretWriter<'a> {
     img: &'a mut Image,
     num_bits: usize,
     use_alpha_channel: bool
 }
 
 #[allow(dead_code)]
-impl ImageCoder<'_> {
-    pub fn create(img: &mut Image) -> ImageCoder {
-        ImageCoder { img, num_bits: 1, use_alpha_channel: false }
+impl SecretWriter<'_> {
+    pub fn create(img: &mut Image) -> SecretWriter {
+        SecretWriter { img, num_bits: 1, use_alpha_channel: false }
     }
 
-    pub fn num_bits(&mut self, num_bits: usize) {
+    pub fn set_num_bits(&mut self, num_bits: usize) {
         if num_bits > 4 {
             panic!("num_bits cannot be > 4!");
         }
@@ -26,16 +26,16 @@ impl ImageCoder<'_> {
         self.use_alpha_channel = use_alpha_channel;
     }
 
-    pub fn get_capacity(&self) -> u32 {
+    pub fn get_capacity(&self) -> usize {
         let total_bits: usize;
 
         if self.use_alpha_channel {
-            total_bits = self.img.data.len() * self.num_bits * 4;
+            total_bits = self.img.get_raw_data().len() * self.num_bits * 4;
         } else {
-            total_bits = self.img.data.len() * self.num_bits * 3;
+            total_bits = self.img.get_raw_data().len() * self.num_bits * 3;
         }
 
-        (total_bits as u32) / 8
+        total_bits / 8
     }
 }
 
@@ -125,7 +125,7 @@ impl BitQueue {
     }
 }
 
-impl Read for ImageCoder<'_> {
+impl Read for SecretWriter<'_> {
     fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
         let bytes_per_pixel;
 
@@ -135,15 +135,15 @@ impl Read for ImageCoder<'_> {
             bytes_per_pixel = 3;
         }
 
-        let data_size = std::cmp::min(buf.len(), (self.img.data.len() * bytes_per_pixel * self.num_bits) / 8);
+        let data_size = std::cmp::min(buf.len(), (self.img.get_raw_data().len() * bytes_per_pixel * self.num_bits) / 8);
 
         let mut q = BitQueue::new();
         
         let mut i = 0;
-        while q.total_filled_bytes() < data_size && i < self.img.data.len() {
+        while q.total_filled_bytes() < data_size && i < self.img.get_raw_data().len() {
             let bitmask = (!(0xFFu8 << self.num_bits)) as u64;
 
-            let pixel = self.img.data[i];
+            let pixel = self.img.get_raw_data()[i];
 
             let a = (pixel >> 24) as u64;
             let b = ((pixel >> 16) & 0xFF) as u64;
@@ -169,11 +169,9 @@ impl Read for ImageCoder<'_> {
     }
 }
 
-impl Write for ImageCoder<'_> {
+impl Write for SecretWriter<'_> {
     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
-        let num_bytes = (buf.len() * 8 + self.num_bits - 1) / self.num_bits;
-
-        if num_bytes > self.get_capacity() as usize {
+        if buf.len() > self.get_capacity() as usize {
             return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "Not enough Image capacity!"));
         }
 
@@ -195,7 +193,7 @@ impl Write for ImageCoder<'_> {
                 let pixel = i / bytes_per_pixel;
                 let subpixel = i % bytes_per_pixel;
 
-                let pixel_data = self.img.data[pixel];
+                let pixel_data = self.img.get_raw_data()[pixel];
                 let mut a = (pixel_data >> 24) as u8;
                 let mut b = ((pixel_data >> 16) & 0xFF) as u8;
                 let mut g = ((pixel_data >> 8) & 0xFF) as u8;
@@ -210,7 +208,7 @@ impl Write for ImageCoder<'_> {
                     _ => { panic!("How did this happen? I don't know..."); }
                 }
                 
-                self.img.data[pixel] = ((a as u32) << 24) | ((b as u32) << 16) | ((g as u32) << 8) | (r as u32);
+                self.img.get_raw_data_mut()[pixel] = ((a as u32) << 24) | ((b as u32) << 16) | ((g as u32) << 8) | (r as u32);
 
                 i += 1;
             }
