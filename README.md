@@ -3,7 +3,7 @@ encode things into images
 
 Currently only supports .png files.
 
-Brief examples on usage:
+#Brief examples on usage:
 
 Encode a file into an image
 image_thing encode "input_image.png" "output_image.png" -f "file_to_encode.txt"
