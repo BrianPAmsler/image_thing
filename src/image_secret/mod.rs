@@ -159,3 +159,10 @@ pub fn decode_file(img: &mut Image, buf: &mut [u8], num_bits: usize) -> String {
 
     filename
 }
+
+pub fn get_img_capacity(img: &mut Image, num_bits: usize) -> usize {
+    let mut coder = SecretWriter::create(img);
+    coder.set_num_bits(num_bits);
+
+    coder.get_capacity()
+}

@@ -110,6 +110,19 @@ fn decode(input_file: &str, args: HashMap<String, String>) -> Result<(), &'stati
     }
 }
 
+pub fn capacity(input_file: &str) -> Result<(), &'static str> {
+    let mut img = Image::create_image_from_file(input_file);
+
+    println!("Capacity for num_bits:");
+    for i in 1..5 {
+        let cap = image_secret::get_img_capacity(&mut img, i);
+
+        println!("\t{}: {}mb", i, cap / 1000000);
+    }
+
+    Ok(())
+}
+
 fn main() {
     let raw_args: Vec<String> = env::args().collect();
 
@@ -123,6 +136,7 @@ fn main() {
     let result = match &command[..] {
         "encode" => encode(&raw_args[2], &raw_args[3], get_args(&raw_args[4..])),
         "decode" => decode(&raw_args[2], get_args(&raw_args[3..])),
+        "capacity" => capacity(&raw_args[2]),
         _ => Err(formatcp!("Usagee: {} [encode, decode] <args>", EXE_NAME))
     };
 
